@@ -10,12 +10,17 @@ import {
 import { Avatar } from "./Avatar";
 import { supabase } from "../supabase";
 import { useAuthStore } from "../store/auth";
+import { useEventsStore } from "../store/events";
+import { useMembersStore } from "../store/members";
 import { useNavigate } from "react-router";
 
 export function NavUser() {
   const user = useAuthStore((s) => s.user);
   const profile = useAuthStore((s) => s.profile);
   const isLoading = useAuthStore((s) => s.isLoading);
+
+  const unsubscribeToMembers = useMembersStore((s) => s.unsubscribeToMembers);
+  const unsubscribeToEvents = useEventsStore((s) => s.unsubscribeToEvents);
 
   const navigate = useNavigate();
 
@@ -62,6 +67,9 @@ export function NavUser() {
         <DropdownMenuItem
           onSelect={() => {
             supabase.auth.signOut();
+
+            unsubscribeToMembers();
+            unsubscribeToEvents();
 
             navigate("/");
           }}

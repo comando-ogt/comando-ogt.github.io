@@ -1,17 +1,12 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogTrigger,
-} from "../components/Dialog";
+import { useEffect, useState, type FormEvent } from "react";
+import { Dialog, DialogClose, DialogContent } from "../components/Dialog";
 
 import { motion } from "motion/react";
 import { Label } from "radix-ui";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { supabase } from "../supabase";
-import type { DBOGTEvent } from "../types/events";
+import type { DBEvent } from "../types/events";
 
 const container = {
   hidden: { opacity: 0 },
@@ -29,11 +24,12 @@ const item = {
 };
 
 interface Props {
-  event?: DBOGTEvent;
-  children: ReactNode;
+  event?: DBEvent;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function EventModal({ event, children }: Props) {
+export function EventModal({ event, isOpen, onOpenChange }: Props) {
   const [title, setTitle] = useState("");
   const [opponent, setOpponent] = useState("");
   const [opponentLogo, setOpponentLogo] = useState("");
@@ -114,8 +110,7 @@ export function EventModal({ event, children }: Props) {
   }
 
   return (
-    <Dialog modal>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog modal open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         title={!event ? "Crear nuevo evento" : "Editar event"}
         description="evento"

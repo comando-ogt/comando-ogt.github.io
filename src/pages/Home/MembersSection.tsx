@@ -1,59 +1,31 @@
-import type { Member, MemberDivision, MemberRank } from "../../types/members";
 import { useEffect, useState } from "react";
 
-import type { DBProfile } from "../../utils/profile";
 import { FlagBar } from "../../components/FlagBar";
 import { HomeMemberCard } from "./HomeMemberCard";
 import { Link } from "../../components/Link";
+import type { Member } from "../../types/members";
 import { motion } from "motion/react";
-import { supabase } from "../../supabase";
-import { useNavigate } from "react-router";
+import { useMembersStore } from "../../store/members";
 
 export function MembersSection() {
   const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const navigate = useNavigate();
+  const dbMembers = useMembersStore((s) => s.members);
+  const isLoading = useMembersStore((s) => s.isLoading);
+  const getMembers = useMembersStore((s) => s.getMembers);
+  const getRandomMembers = useMembersStore((s) => s.getRandomMembers);
 
-  // TODO: add loading ui
   useEffect(() => {
+    if (members.length !== 0) return;
+
     getMembers();
   }, []);
 
-  async function getMembers() {
-    const { data, error } = await supabase.rpc("random_profiles", { count: 8 });
+  useEffect(() => {
+    setMembers(getRandomMembers(8));
+  }, [dbMembers]);
 
-    // TODO: reroute to a page showing that the members were not found
-    if (error) {
-      console.log(error);
-
-      navigate("/404");
-
-      return;
-    }
-
-    const membersFromData: Member[] = [];
-
-    (data as DBProfile[]).forEach((member) => {
-      membersFromData.push({
-        avatar: member.avatar_url ?? "",
-        name: member.discord_username.replace(/^OGT(\s*(\||丨)?)?/i, ""),
-        rank: member.rank as MemberRank,
-        quote: member.quote ?? "",
-        bio: member.bio ?? "",
-        division: member.division as MemberDivision,
-        kills: member.total_kills,
-        deaths: member.total_deaths,
-        url: member.member_url,
-        medals: [],
-      });
-    });
-
-    setMembers(membersFromData);
-
-    setLoading(false);
-  }
-
+  // TODO: add loading ui
   return (
     <section id="members" className="py-20">
       <div className="mx-auto px-6 container">

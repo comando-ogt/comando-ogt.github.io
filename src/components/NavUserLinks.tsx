@@ -1,6 +1,8 @@
 import { NavLink } from "./NavLink";
 import { supabase } from "../supabase";
 import { useAuthStore } from "../store/auth";
+import { useEventsStore } from "../store/events";
+import { useMembersStore } from "../store/members";
 import { useNavigate } from "react-router";
 
 interface Props {
@@ -11,6 +13,9 @@ export function NavUserLinks({ className }: Props) {
   const user = useAuthStore((s) => s.user);
   const profile = useAuthStore((s) => s.profile);
   const isLoading = useAuthStore((s) => s.isLoading);
+
+  const unsubscribeToMembers = useMembersStore((s) => s.unsubscribeToMembers);
+  const unsubscribeToEvents = useEventsStore((s) => s.unsubscribeToEvents);
 
   const navigate = useNavigate();
 
@@ -42,6 +47,9 @@ export function NavUserLinks({ className }: Props) {
         className="text-gray-300 hover:text-white transition cursor-pointer"
         onClick={() => {
           supabase.auth.signOut();
+
+          unsubscribeToMembers();
+          unsubscribeToEvents();
 
           navigate("/");
         }}

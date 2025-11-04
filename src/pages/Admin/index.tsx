@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "../../components/Button";
-import type { DBOGTEvent } from "../../types/events";
+import type { DBEvent } from "../../types/events";
 import { EventModal } from "../../modals/Event";
 import { FlagBar } from "../../components/FlagBar";
 import { Navigate } from "react-router";
@@ -11,7 +11,9 @@ import { supabase } from "../../supabase";
 import { useAuthStore } from "../../store/auth";
 
 export function AdminPage() {
-  const [events, setEvents] = useState<DBOGTEvent[]>([]);
+  const [events, setEvents] = useState<DBEvent[]>([]);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [modalEvent, setModalEvent] = useState<DBEvent | undefined>(undefined);
 
   const profile = useAuthStore((s) => s.profile);
 
@@ -22,7 +24,7 @@ export function AdminPage() {
   async function getEvents() {
     const { data } = await supabase.from("events").select();
 
-    setEvents(data as unknown as DBOGTEvent[]);
+    setEvents(data as unknown as DBEvent[]);
   }
 
   if (!profile || profile?.web_role !== "admin") {
@@ -52,18 +54,30 @@ export function AdminPage() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="font-staatliches text-white text-4xl">Eventos</h2>
 
-          <EventModal>
-            <Button variant="green">Agregar Evento</Button>
-          </EventModal>
+          <Button
+            variant="green"
+            onClick={() => {
+              setModalEvent(undefined);
+              setIsEventModalOpen(true);
+            }}
+          >
+            Agregar Evento
+          </Button>
         </div>
         <div className="space-y-2">
           {events.map((event) => (
             <div key={event.id} className="flex gap-2 rounded">
               <OGTEvent event={event} className="flex-1" full />
               <div className="flex flex-col justify-center gap-2">
-                <EventModal event={event}>
-                  <Button variant="gray">Editar</Button>
-                </EventModal>
+                <Button
+                  variant="gray"
+                  onClick={() => {
+                    setModalEvent(event);
+                    setIsEventModalOpen(true);
+                  }}
+                >
+                  Editar
+                </Button>
 
                 <Button
                   variant="red"
@@ -91,6 +105,12 @@ export function AdminPage() {
           ))}
         </div>
       </div>
+
+      <EventModal
+        event={modalEvent}
+        isOpen={isEventModalOpen}
+        onOpenChange={setIsEventModalOpen}
+      />
     </RegularPageLayout>
   );
 }

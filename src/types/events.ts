@@ -1,4 +1,4 @@
-export interface DBOGTEvent {
+export interface DBEvent {
   id: number;
   created_at: string; // timestamp with time zone
   title: string;

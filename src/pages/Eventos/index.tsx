@@ -1,33 +1,31 @@
 import { useEffect, useState } from "react";
 
-import type { DBOGTEvent } from "../../types/events";
+import type { DBEvent } from "../../types/events";
 import { FlagBar } from "../../components/FlagBar";
 import { OGTEvent } from "../../components/OGTEvent";
 import { RegularPageLayout } from "../../layouts/RegularPage";
-import { supabase } from "../../supabase";
+import { useEventsStore } from "../../store/events";
 
 export function Eventos() {
-  const [pastEvents, setPastEvents] = useState<DBOGTEvent[]>([]);
-  const [futureEvents, setFutureEvents] = useState<DBOGTEvent[]>([]);
+  const [pastEvents, setPastEvents] = useState<DBEvent[]>([]);
+  const [futureEvents, setFutureEvents] = useState<DBEvent[]>([]);
+
+  const events = useEventsStore((s) => s.events);
+  const isLoading = useEventsStore((s) => s.isLoading);
+  const getEvents = useEventsStore((s) => s.getEvents);
 
   useEffect(() => {
+    if (events.length !== 0) return;
+
     getEvents();
   }, []);
 
-  async function getEvents() {
-    const { data, error } = await supabase.from("events").select("*");
-
-    if (error) {
-      console.error(error);
-
-      return;
-    }
-
+  useEffect(() => {
     const now = new Date();
-    const past: DBOGTEvent[] = [];
-    const future: DBOGTEvent[] = [];
+    const past: DBEvent[] = [];
+    const future: DBEvent[] = [];
 
-    for (const event of data) {
+    for (const event of events) {
       if (new Date(event.schedule_at) < now) {
         past.push(event);
       } else {
@@ -37,8 +35,9 @@ export function Eventos() {
 
     setPastEvents(past);
     setFutureEvents(future);
-  }
+  }, [events]);
 
+  // TODO: add loading ui
   return (
     <RegularPageLayout>
       <h1 className="text-white text-5xl text-center">Eventos</h1>

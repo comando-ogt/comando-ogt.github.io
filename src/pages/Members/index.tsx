@@ -1,58 +1,21 @@
-import { useEffect, useState } from "react";
-
 import { FlagBar } from "../../components/FlagBar";
 import { ListMemberCard } from "./ListMemberCard";
-import type { Member } from "../../types/members";
 import { RegularPageLayout } from "../../layouts/RegularPage";
-import { profileColumns } from "../../utils/profile";
-import { supabase } from "../../supabase";
-import { useNavigate } from "react-router";
+import { useEffect } from "react";
+import { useMembersStore } from "../../store/members";
 
 export function Members() {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
+  const members = useMembersStore((s) => s.members);
+  const isLoading = useMembersStore((s) => s.isLoading);
+  const getMembers = useMembersStore((s) => s.getMembers);
 
-  const navigate = useNavigate();
-
-  // TODO: add loading ui
   useEffect(() => {
+    if (members.length !== 0) return;
+
     getMembers();
   }, []);
 
-  async function getMembers() {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(profileColumns);
-
-    // TODO: reroute to a page showing that the members were not found
-    if (error) {
-      navigate("/404");
-
-      return;
-    }
-
-    const membersFromData: Member[] = [];
-
-    data?.forEach((member) => {
-      membersFromData.push({
-        avatar: member.avatar_url ?? "",
-        name: member.discord_username.replace(/^OGT(\s*(\||丨)?)?/i, ""),
-        rank: member.rank,
-        quote: member.quote,
-        bio: member.bio,
-        division: member.division,
-        kills: member.total_kills,
-        deaths: member.total_deaths,
-        url: member.member_url,
-        medals: [],
-      });
-    });
-
-    setMembers(membersFromData);
-
-    setLoading(false);
-  }
-
+  // TODO: add loading ui
   return (
     <RegularPageLayout>
       <h1 className="text-white text-5xl text-center">Miembros</h1>

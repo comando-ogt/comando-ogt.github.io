@@ -28,6 +28,7 @@ export interface Medal {
 }
 
 export interface Member {
+  id: string;
   avatar: string;
   name: string;
   rank: MemberRank;
