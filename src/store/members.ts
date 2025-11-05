@@ -6,6 +6,8 @@ import { supabase } from "../supabase";
 
 interface MembersStore {
   members: Member[];
+  activeMembers: Member[];
+  mercenariesMembers: Member[];
   isLoading: boolean;
 
   getMembers: () => Promise<void>;
@@ -19,6 +21,8 @@ let subscription: RealtimeChannel | null = null;
 
 export const useMembersStore = create<MembersStore>((set, get) => ({
   members: [],
+  activeMembers: [],
+  mercenariesMembers: [],
   isLoading: true,
 
   getMembers: async () => {
@@ -30,25 +34,35 @@ export const useMembersStore = create<MembersStore>((set, get) => ({
       return;
     }
 
-    const membersFromData: Member[] = [];
+    const members: Member[] = [];
+    const activeMembers: Member[] = [];
+    const mercenariesMembers: Member[] = [];
 
-    data?.forEach((member) => {
-      membersFromData.push({
-        id: member.user_id,
-        avatar: member.avatar_url ?? "",
-        name: member.discord_username.replace(/^OGT(\s*(\||丨)?)?/i, ""),
-        rank: member.rank,
-        quote: member.quote,
-        bio: member.bio,
-        division: member.division,
-        kills: member.total_kills,
-        deaths: member.total_deaths,
-        url: member.member_url,
+    data?.forEach((profile) => {
+      const member = {
+        id: profile.user_id,
+        avatar: profile.avatar_url ?? "",
+        name: profile.hll_username.replace(/^OGT(\s*(\||丨)?)?/i, ""),
+        rank: profile.rank,
+        quote: profile.quote,
+        bio: profile.bio,
+        division: profile.division,
+        kills: profile.total_kills,
+        deaths: profile.total_deaths,
+        url: profile.member_url,
         medals: [],
-      });
+      };
+
+      members.push(member);
+
+      if (profile.membership_status === "active") {
+        activeMembers.push(member);
+      } else if (profile.membership_status === "merc") {
+        mercenariesMembers.push(member);
+      }
     });
 
-    set({ members: membersFromData, isLoading: false });
+    set({ members, activeMembers, mercenariesMembers, isLoading: false });
 
     return;
   },
@@ -72,51 +86,64 @@ export const useMembersStore = create<MembersStore>((set, get) => ({
 
           const { members } = get();
 
-          let updated = [...members];
-
-          if (payload.eventType === "INSERT") {
-            updated.push({
-              id: payload.new.user_id,
-              avatar: payload.new.avatar_url ?? "",
-              name: payload.new.discord_username.replace(
-                /^OGT(\s*(\||丨)?)?/i,
-                ""
-              ),
-              rank: payload.new.rank,
-              quote: payload.new.quote,
-              bio: payload.new.bio,
-              division: payload.new.division,
-              kills: payload.new.total_kills,
-              deaths: payload.new.total_deaths,
-              url: payload.new.member_url,
-              medals: [],
+          if (payload.eventType === "DELETE") {
+            set({
+              members: members.filter((member) => member.id !== payload.old.id),
+              isLoading: false,
             });
-          } else if (payload.eventType === "UPDATE") {
-            updated = updated.map((member) =>
-              member.id === payload.new.id
-                ? {
-                    id: payload.new.user_id,
-                    avatar: payload.new.avatar_url ?? "",
-                    name: payload.new.discord_username.replace(
-                      /^OGT(\s*(\||丨)?)?/i,
-                      ""
-                    ),
-                    rank: payload.new.rank,
-                    quote: payload.new.quote,
-                    bio: payload.new.bio,
-                    division: payload.new.division,
-                    kills: payload.new.total_kills,
-                    deaths: payload.new.total_deaths,
-                    url: payload.new.member_url,
-                    medals: [],
-                  }
-                : member
-            );
-          } else if (payload.eventType === "DELETE") {
-            updated = updated.filter((member) => member.id !== payload.old.id);
+
+            return;
           }
 
-          set({ members: updated, isLoading: false });
+          const newMember = {
+            id: payload.new.user_id,
+            avatar: payload.new.avatar_url ?? "",
+            name: payload.new.hll_username.replace(/^OGT(\s*(\||丨)?)?/i, ""),
+            rank: payload.new.rank,
+            quote: payload.new.quote,
+            bio: payload.new.bio,
+            division: payload.new.division,
+            kills: payload.new.total_kills,
+            deaths: payload.new.total_deaths,
+            url: payload.new.member_url,
+            medals: [],
+          };
+
+          if (payload.eventType === "INSERT") {
+            set({ members: [...members, newMember], isLoading: false });
+
+            return;
+          }
+
+          if (payload.eventType === "UPDATE") {
+            const activeMembers: Member[] = [];
+            const mercenariesMembers: Member[] = [];
+
+            for (let i = 0; i < members.length; i++) {
+              let member = members[i];
+
+              if (member.id === newMember.id) {
+                member = newMember;
+              }
+
+              if (payload.new.membership_status === "active") {
+                activeMembers.push(member);
+              } else if (payload.new.membership_status === "merc") {
+                mercenariesMembers.push(member);
+              }
+
+              members[i] = member;
+            }
+
+            set({
+              members,
+              activeMembers,
+              mercenariesMembers,
+              isLoading: false,
+            });
+
+            return;
+          }
         }
       )
       .subscribe();
@@ -130,11 +157,11 @@ export const useMembersStore = create<MembersStore>((set, get) => ({
   },
 
   getRandomMembers: (count: number) => {
-    const { members } = get();
+    const { activeMembers } = get();
 
-    if (members.length === 0) return [];
+    if (activeMembers.length === 0) return [];
 
-    const shuffled = [...members].sort(() => 0.5 - Math.random());
+    const shuffled = [...activeMembers].sort(() => 0.5 - Math.random());
 
     return shuffled.slice(0, count);
   },
