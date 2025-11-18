@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { DBEvent } from "../../types/events";
+import type { DBEvent } from "../../types/db";
 import { FlagBar } from "../../components/FlagBar";
 import { OGTEvent } from "../../components/OGTEvent";
 import { RegularPageLayout } from "../../layouts/RegularPage";

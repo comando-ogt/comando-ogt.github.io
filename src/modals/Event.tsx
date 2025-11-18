@@ -6,7 +6,7 @@ import { Label } from "radix-ui";
 import { Button } from "../components/Button";
 import { TextInput } from "../components/TextInput";
 import { supabase } from "../supabase";
-import type { DBEvent } from "../types/events";
+import type { DBEvent } from "../types/db";
 
 const container = {
   hidden: { opacity: 0 },

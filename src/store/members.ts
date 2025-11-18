@@ -1,4 +1,6 @@
-import type { Member } from "../types/members";
+import type { Member, MemberDivision, MemberRank } from "../types/members";
+
+import type { DBProfile } from "../types/db";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { profileColumns } from "../utils/profile";
@@ -38,29 +40,19 @@ export const useMembersStore = create<MembersStore>((set, get) => ({
     const activeMembers: Member[] = [];
     const mercenariesMembers: Member[] = [];
 
-    data?.forEach((profile) => {
-      const member = {
-        id: profile.user_id,
-        avatar: profile.avatar_url ?? "",
-        name: profile.hll_username.replace(/^OGT(\s*(\||丨)?)?/i, ""),
-        rank: profile.rank,
-        quote: profile.quote,
-        bio: profile.bio,
-        division: profile.division,
-        kills: profile.total_kills,
-        deaths: profile.total_deaths,
-        url: profile.member_url,
-        medals: [],
-      };
+    await Promise.all(
+      data?.map(async (profile) => {
+        const member = await createMemberFromProfile(profile);
 
-      members.push(member);
+        members.push(member);
 
-      if (profile.membership_status === "active") {
-        activeMembers.push(member);
-      } else if (profile.membership_status === "merc") {
-        mercenariesMembers.push(member);
-      }
-    });
+        if (profile.membership_status === "active") {
+          activeMembers.push(member);
+        } else if (profile.membership_status === "merc") {
+          mercenariesMembers.push(member);
+        }
+      })
+    );
 
     set({ members, activeMembers, mercenariesMembers, isLoading: false });
 
@@ -81,7 +73,7 @@ export const useMembersStore = create<MembersStore>((set, get) => ({
           schema: "public",
           table: "profiles",
         },
-        (payload) => {
+        async (payload) => {
           set({ isLoading: true });
 
           const { members } = get();
@@ -95,19 +87,9 @@ export const useMembersStore = create<MembersStore>((set, get) => ({
             return;
           }
 
-          const newMember = {
-            id: payload.new.user_id,
-            avatar: payload.new.avatar_url ?? "",
-            name: payload.new.hll_username.replace(/^OGT(\s*(\||丨)?)?/i, ""),
-            rank: payload.new.rank,
-            quote: payload.new.quote,
-            bio: payload.new.bio,
-            division: payload.new.division,
-            kills: payload.new.total_kills,
-            deaths: payload.new.total_deaths,
-            url: payload.new.member_url,
-            medals: [],
-          };
+          const newMember = await createMemberFromProfile(
+            payload.new as DBProfile
+          );
 
           if (payload.eventType === "INSERT") {
             set({ members: [...members, newMember], isLoading: false });
@@ -166,3 +148,41 @@ export const useMembersStore = create<MembersStore>((set, get) => ({
     return shuffled.slice(0, count);
   },
 }));
+
+async function createMemberFromProfile(profile: DBProfile): Promise<Member> {
+  let avatarUrl = "/logo.png";
+
+  if (profile.avatar_url) {
+    try {
+      const { data: avatarData, error } = await supabase.storage
+        .from("avatars")
+        .download(profile.avatar_url);
+
+      if (error) {
+        throw error;
+      }
+
+      const url = URL.createObjectURL(avatarData);
+
+      avatarUrl = url;
+    } catch (error) {
+      // console.log("Error downloading avatar image: ", e.message)
+    }
+  }
+
+  const member = {
+    id: profile.user_id,
+    avatar: avatarUrl,
+    name: profile.hll_username.replace(/^OGT(\s*(\||丨)?)?/i, ""),
+    rank: profile.rank as MemberRank,
+    quote: profile.quote ?? "",
+    bio: profile.bio ?? "",
+    division: profile.division as MemberDivision,
+    kills: profile.total_kills,
+    deaths: profile.total_deaths,
+    url: profile.member_url,
+    medals: [],
+  };
+
+  return member;
+}

@@ -1,14 +1,11 @@
-import { useEffect, type ReactNode } from "react";
+import type { DBProfile } from "../types/db";
+import { profileColumns } from "../utils/profile";
+import { supabase } from "../supabase";
 import { unstable_batchedUpdates } from "react-dom";
 import { useAuthStore } from "../store/auth";
-import { supabase } from "../supabase";
-import { profileColumns, type DBProfile } from "../utils/profile";
+import { useEffect } from "react";
 
-interface Props {
-  children: ReactNode;
-}
-
-export function AuthWrapper({ children }: Props) {
+export function Auth() {
   const setSession = useAuthStore((s) => s.setSession);
   const setUser = useAuthStore((s) => s.setUser);
   const clear = useAuthStore((s) => s.clear);
@@ -29,27 +26,25 @@ export function AuthWrapper({ children }: Props) {
       }
     });
 
-    const { data: authData } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
 
-        if (session?.user) {
-          fetchProfile(session.user.id);
-        } else {
-          clear();
-        }
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        clear();
       }
-    );
+    });
 
     return () => {
       isMounted = false;
 
-      authData.subscription.unsubscribe();
+      data.subscription.unsubscribe();
     };
   }, []);
 
-  return <>{children}</>;
+  return null;
 }
 
 async function fetchProfile(userId: string) {

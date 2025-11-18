@@ -32,7 +32,12 @@ export function NavUser() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="!h-8 all-unset">
-          <Avatar src="" name="" size="xs" className="cursor-pointer" />
+          <Avatar
+            src={profile.avatar_url ?? "/logo.png"}
+            name=""
+            size="xs"
+            className="cursor-pointer"
+          />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

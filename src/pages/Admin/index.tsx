@@ -2,7 +2,7 @@ import { faPencil, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState } from "react";
 
 import { Button } from "../../components/Button";
-import type { DBEvent } from "../../types/events";
+import type { DBEvent } from "../../types/db";
 import { EventModal } from "../../modals/Event";
 import { FlagBar } from "../../components/FlagBar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -15,7 +15,7 @@ import { useAuthStore } from "../../store/auth";
 import { useEventsStore } from "../../store/events";
 import { useMembersStore } from "../../store/members";
 
-export function AdminPage() {
+export function Admin() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [modalEvent, setModalEvent] = useState<DBEvent | undefined>(undefined);
 
@@ -50,7 +50,7 @@ export function AdminPage() {
 
   return (
     <RegularPageLayout>
-      <h1 className="text-white text-5xl text-center">Admin Dashboard</h1>
+      <h1 className="text-white text-5xl text-center">Panel de Admin</h1>
       <FlagBar className="my-4 w-full md:w-2xs" />
 
       <div className="mt-12">

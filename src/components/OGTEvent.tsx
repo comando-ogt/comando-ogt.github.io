@@ -1,4 +1,4 @@
-import type { DBEvent } from "../types/events";
+import type { DBEvent } from "../types/db";
 import clsx from "clsx";
 import { es } from "date-fns/locale";
 import { formatDistanceToNow } from "date-fns";

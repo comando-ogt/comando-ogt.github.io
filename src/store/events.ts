@@ -1,4 +1,4 @@
-import type { DBEvent } from "../types/events";
+import type { DBEvent } from "../types/db";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { supabase } from "../supabase";

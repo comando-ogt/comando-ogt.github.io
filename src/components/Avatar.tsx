@@ -19,6 +19,15 @@ const sizeClasses: Record<AvatarSize, string> = {
   "2xl": "w-48 h-48",
 } as const;
 
+const textSizeClasses: Record<AvatarSize, string> = {
+  xs: "text-sm",
+  sm: "text-md",
+  md: "text-lg",
+  lg: "text-xl",
+  xl: "text-3xl",
+  "2xl": "text-6xl",
+} as const;
+
 export function Avatar({ src, name, size = "sm", className }: Props) {
   return (
     <PrimitiveAvatar.Root
@@ -34,10 +43,23 @@ export function Avatar({ src, name, size = "sm", className }: Props) {
     >
       <PrimitiveAvatar.Image
         className="border-inherit w-full h-full object-cover"
-        src={src === "" ? "/logo.png" : src}
+        src={src}
         alt={`${name}'s Avatar`}
       />
-      <PrimitiveAvatar.Fallback className="flex justify-center items-center border-inherit w-full h-full text-black">
+      <PrimitiveAvatar.Fallback
+        className={clsx(
+          "flex",
+          "justify-center",
+          "items-center",
+          "border-inherit",
+          "w-full",
+          "h-full",
+          "text-black",
+          "bg-neutral-200",
+          "font-extrabold",
+          textSizeClasses[size]
+        )}
+      >
         {name
           .trim()
           .split(/\s+/)

@@ -1,6 +1,6 @@
 import type { Session, User } from "@supabase/supabase-js";
 
-import type { DBProfile } from "../utils/profile";
+import type { DBProfile } from "../types/db";
 import { create } from "zustand";
 
 interface AuthStore {
