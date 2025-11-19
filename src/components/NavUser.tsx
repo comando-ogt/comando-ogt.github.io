@@ -17,6 +17,7 @@ import { useNavigate } from "react-router";
 export function NavUser() {
   const user = useAuthStore((s) => s.user);
   const profile = useAuthStore((s) => s.profile);
+  const avatarUrl = useAuthStore((s) => s.avatarUrl);
   const isLoading = useAuthStore((s) => s.isLoading);
 
   const unsubscribeToMembers = useMembersStore((s) => s.unsubscribeToMembers);
@@ -33,7 +34,7 @@ export function NavUser() {
       <DropdownMenuTrigger asChild>
         <button className="!h-8 all-unset">
           <Avatar
-            src={profile.avatar_url ?? "/logo.png"}
+            src={avatarUrl ?? "/logo.png"}
             name=""
             size="xs"
             className="cursor-pointer"

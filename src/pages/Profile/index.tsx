@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import AvatarUpload from "./AvatarUpload";
 import { Button } from "../../components/Button";
+import type { DBProfile } from "../../types/db";
 import { FlagBar } from "../../components/FlagBar";
 import { Navigate } from "react-router";
 import { RegularPageLayout } from "../../layouts/RegularPage";
@@ -11,13 +12,15 @@ import { supabase } from "../../supabase";
 import { useAuthStore } from "../../store/auth";
 
 export function Profile() {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>("");
   const [hllUsername, setHLLUsername] = useState("");
   const [hllLevel, setHLLLevel] = useState(0);
   const [discordUsername, setDiscordUsername] = useState("");
   const [bio, setBio] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const profile = useAuthStore((state) => state.profile);
+  const profile = useAuthStore((s) => s.profile);
+  const currAvatarUrl = useAuthStore((s) => s.avatarUrl);
 
   if (!profile) {
     return <Navigate to="/login" />;
@@ -26,6 +29,7 @@ export function Profile() {
   useEffect(() => {
     if (!profile) return;
 
+    setAvatarUrl(profile.avatar_url);
     setHLLUsername(profile.hll_username);
     setHLLLevel(profile.hll_level);
     setDiscordUsername(profile.discord_username);
@@ -40,7 +44,8 @@ export function Profile() {
         throw new Error("Profile not found");
       }
 
-      const updates = {
+      const updates: Partial<DBProfile> = {
+        avatar_url: avatarUrl,
         hll_username: hllUsername,
         hll_level: hllLevel,
         discord_username: discordUsername,
@@ -69,8 +74,11 @@ export function Profile() {
       <FlagBar className="my-4 w-full md:w-2xs" />
       <div className="flex flex-wrap gap-4">
         <AvatarUpload
-          url={profile.avatar_url ?? "/logo.png"}
-          onUpload={() => {}}
+          url={currAvatarUrl}
+          onUpload={(fileName) => {
+            setAvatarUrl(fileName);
+            updateProfile();
+          }}
         />
 
         <form action={updateProfile} className="flex-1 space-y-4">

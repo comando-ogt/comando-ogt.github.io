@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent } from "react";
+import { useAuthStore } from "../../store/auth";
 import { supabase } from "../../supabase";
 import { getButtonStyles } from "../../utils/button";
 import { getErrorMessage } from "../../utils/general";
@@ -10,6 +11,8 @@ interface Props {
 
 export default function AvatarUpload({ url, onUpload }: Props) {
   const [uploading, setUploading] = useState(false);
+
+  const profile = useAuthStore((s) => s.profile);
 
   async function uploadAvatar(event: ChangeEvent<HTMLInputElement>) {
     try {
@@ -29,6 +32,18 @@ export default function AvatarUpload({ url, onUpload }: Props) {
 
       if (error) {
         throw error;
+      }
+
+      if (profile && profile.avatar_url) {
+        if (profile.avatar_url !== "") {
+          const { error: deleteError } = await supabase.storage
+            .from("avatars")
+            .remove([profile.avatar_url]);
+
+          if (deleteError) {
+            throw deleteError;
+          }
+        }
       }
 
       onUpload(fileName);

@@ -1,4 +1,5 @@
 import type { DBProfile } from "../types/db";
+import { getAvatarUrl } from "../store/members";
 import { profileColumns } from "../utils/profile";
 import { supabase } from "../supabase";
 import { unstable_batchedUpdates } from "react-dom";
@@ -59,7 +60,17 @@ async function fetchProfile(userId: string) {
   if (error) {
     setProfile(null);
   } else {
-    setProfile(data as unknown as DBProfile);
+    const profile = data as unknown as DBProfile;
+
+    if (profile.membership_status !== "pending") {
+      setProfile(profile);
+
+      const avatarUrl = await getAvatarUrl(profile.avatar_url ?? "");
+
+      useAuthStore.getState().setAvatarUrl(avatarUrl);
+    } else {
+      setProfile(null);
+    }
   }
 
   unstable_batchedUpdates(() => {

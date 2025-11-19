@@ -38,10 +38,7 @@ export function Nav() {
           <NavUser />
         </div>
 
-        <button
-          className="md:hidden"
-          onClick={() => setIsMenuOpen((state) => !state)}
-        >
+        <button className="md:hidden" onClick={() => setIsMenuOpen((s) => !s)}>
           <FontAwesomeIcon icon={faBars} />
         </button>
       </nav>

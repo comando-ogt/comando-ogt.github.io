@@ -150,25 +150,7 @@ export const useMembersStore = create<MembersStore>((set, get) => ({
 }));
 
 async function createMemberFromProfile(profile: DBProfile): Promise<Member> {
-  let avatarUrl = "/logo.png";
-
-  if (profile.avatar_url) {
-    try {
-      const { data: avatarData, error } = await supabase.storage
-        .from("avatars")
-        .download(profile.avatar_url);
-
-      if (error) {
-        throw error;
-      }
-
-      const url = URL.createObjectURL(avatarData);
-
-      avatarUrl = url;
-    } catch (error) {
-      // console.log("Error downloading avatar image: ", e.message)
-    }
-  }
+  const avatarUrl = await getAvatarUrl(profile.avatar_url ?? "");
 
   const member = {
     id: profile.user_id,
@@ -185,4 +167,28 @@ async function createMemberFromProfile(profile: DBProfile): Promise<Member> {
   };
 
   return member;
+}
+
+export async function getAvatarUrl(url: string): Promise<string> {
+  let avatarUrl = "/logo.png";
+
+  if (url === "") return avatarUrl;
+
+  try {
+    const { data: avatarData, error } = await supabase.storage
+      .from("avatars")
+      .download(url);
+
+    if (error) {
+      throw error;
+    }
+
+    const newURL = URL.createObjectURL(avatarData);
+
+    avatarUrl = newURL;
+  } catch (error) {
+    // console.log("Error downloading avatar image: ", e.message)
+  }
+
+  return avatarUrl;
 }
